@@ -25,12 +25,98 @@ app.get('/productos/', (req, res) =>{
     }
 })
 
+app.get('/usuarios/', (req, res) =>{
+    try {
+        let allUsers = datos.usuarios
+
+        res.status(200).json(allUsers)
+
+    } catch (error) {
+        res.status(204).json({"message": error})
+    }
+})
+
 app.get('/productos/:id', (req, res) => {
     try {
         let productoId = parseInt(req.params.id)
         let productoEncontrado = datos.productos.find((producto) => producto.id === productoId)
 
         res.status(200).json(productoEncontrado)
+
+    } catch (error) {
+        res.status(204).json({"message": error})
+    }
+})
+
+app.get('/productos/:id/precio', (req, res) => {
+    try {
+        let productoId = parseInt(req.params.id)
+        let productoEncontrado = datos.productos.find((producto) => producto.id === productoId)
+
+        res.status(200).json(productoEncontrado.precio)
+
+    } catch (error) {
+        res.status(204).json({"message": error})
+    }
+})
+
+app.get('/stock', (req, res) => {
+    try {
+        var preciototal = 0;
+        var stock = datos.productos.length;
+        for(let i = 0; i < datos.productos.length; i = i + 1 ) {  
+            preciototal = preciototal+datos.productos[i].precio
+        }
+
+        res.status(200).json("Stock de productos actual: "+stock+" Precios individuales sumados: "+preciototal.toFixed(2))
+
+    } catch (error) {
+        res.status(204).json({"message": error})
+    }
+})
+
+app.get('/productos/:id/nombre', (req, res) => {
+    try {
+        let productoId = parseInt(req.params.id)
+        let productoEncontrado = datos.productos.find((producto) => producto.id === productoId)
+
+        res.status(200).json(productoEncontrado.nombre)
+
+    } catch (error) {
+        res.status(204).json({"message": error})
+    }
+})
+
+app.get('/usuarios/:id', (req, res) => {
+    try {
+        let usuarioId = parseInt(req.params.id)
+        let usuarioEncontrado = datos.usuarios.find((usuario) => usuario.id === usuarioId)
+
+        res.status(200).json(usuarioEncontrado)
+
+    } catch (error) {
+        res.status(204).json({"message": error})
+    }
+})
+
+app.get('/usuarios/:id/telefono', (req, res) => {
+    try {
+        let usuarioId = parseInt(req.params.id)
+        let usuarioEncontrado = datos.usuarios.find((usuario) => usuario.id === usuarioId)
+
+        res.status(200).json(usuarioEncontrado.telefono)
+
+    } catch (error) {
+        res.status(204).json({"message": error})
+    }
+})
+
+app.get('/usuarios/:id/nombre', (req, res) => {
+    try {
+        let usuarioId = parseInt(req.params.id)
+        let usuarioEncontrado = datos.usuarios.find((usuario) => usuario.id === usuarioId)
+
+        res.status(200).json(usuarioEncontrado.nombre)
 
     } catch (error) {
         res.status(204).json({"message": error})
@@ -49,6 +135,27 @@ app.post('/productos', (req, res) => {
             const data = JSON.parse(bodyTemp)
             req.body = data
             datos.productos.push(req.body)
+        })
+    
+        res.status(201).json({"message": "success"})
+
+    } catch (error) {
+        res.status(204).json({"message": "error"})
+    }
+})
+
+app.post('/usuarios', (req, res) => {
+    try {
+        let bodyTemp = ''
+
+        req.on('data', (chunk) => {
+            bodyTemp += chunk.toString()
+        })
+    
+        req.on('end', () => {
+            const data = JSON.parse(bodyTemp)
+            req.body = data
+            datos.usuarios.push(req.body)
         })
     
         res.status(201).json({"message": "success"})
@@ -89,6 +196,44 @@ app.patch('/productos/:id', (req, res) => {
         }
 
         res.status(200).send('Producto actualizado')
+    })
+})
+
+app.patch('/usuarios/:id', (req, res) => {
+    let idUsuarioAEditar = parseInt(req.params.id)
+    let usuarioAActualizar = datos.usuarios.find((usuario) => usuario.id === idUsuarioAEditar)
+
+    if (!usuarioAActualizar) {
+        res.status(204).json({"message":"Usuario no encontrado"})
+    }
+
+    let bodyTemp = ''
+
+    req.on('data', (chunk) => {
+        bodyTemp += chunk.toString()
+    })
+
+    req.on('end', () => {
+        const data = JSON.parse(bodyTemp)
+        req.body = data
+        
+        if(data.nombre){
+            usuarioAActualizar.nombre = data.nombre
+        }
+        
+        if (data.edad){
+            usuarioAActualizar.edad = data.edad
+        }
+
+        if (data.email){
+            usuarioAActualizar.email = data.email
+        }
+
+        if (data.telefono){
+            usuarioAActualizar.telefono = data.telefono
+        }
+
+        res.status(200).send('Usuario actualizado')
     })
 })
 

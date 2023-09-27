@@ -53,6 +53,17 @@ app.get('/productos/', (req, res) =>{
     }
 })
 
+app.get('/usuarios/', (req, res) =>{
+    try {
+        let allUsers = datos.usuarios
+
+        res.status(200).json(allUsers)
+
+    } catch (error) {
+        res.status(204).json({"message": error})
+    }
+})
+
 /* Manejo de una request GET con parámetro, es para devolver un producto en particular.
    Podría hacerse el manejo de cada request GET
    para cada url en particular, productos/1, productos/2, productos/3,

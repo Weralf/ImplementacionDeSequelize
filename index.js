@@ -1,12 +1,21 @@
 import { createRequire } from 'node:module'
+import db from './db/connection.js'
+import express from 'express'
+import Productos from './modelos/productos.js'
+import Usuarios from './modelos/usuarios.js'
 
 const require = createRequire(import.meta.url)
-const datos = require('./datos.json')
 
-import express from 'express'
 const html = '<h1>Bienvenido a la API</h1><p>Los comandos disponibles son:</p><ul><li>GET: /productos/</li><li>GET: /productos/id</li>    <li>POST: /productos/</li>    <li>DELETE: /productos/id</li>    <li>PUT: /productos/id</li>    <li>PATCH: /productos/id</li>    <li>GET: /usuarios/</li>    <li>GET: /usuarios/id</li>    <li>POST: /usuarios/</li>    <li>DELETE: /usuarios/id</li>    <li>PUT: /usuarios/id</li>    <li>PATCH: /usuarios/id</li></ul>'
 
 const app = express()
+
+try {
+  await db.authenticate();
+  console.log("La coneccion se establecio correctamente!");
+} catch (error) {
+  console.error("No se pudo conectar con la base de datos:", error);
+}
 
 const exposedPort = 1234
 
@@ -14,9 +23,9 @@ app.get('/', (req, res) => {
     res.status(200).send(html)
 })
 
-app.get('/productos/', (req, res) =>{
+app.get('/productos/', async (req, res) =>{
     try {
-        let allProducts = datos.productos
+         let allProducts = await Productos.findAll()
 
         res.status(200).json(allProducts)
 
@@ -25,9 +34,9 @@ app.get('/productos/', (req, res) =>{
     }
 })
 
-app.get('/usuarios/', (req, res) =>{
+app.get('/usuarios/', async (req, res) =>{
     try {
-        let allUsers = datos.usuarios
+        let allUsers = await Usuarios.findAll()
 
         res.status(200).json(allUsers)
 
@@ -36,10 +45,10 @@ app.get('/usuarios/', (req, res) =>{
     }
 })
 
-app.get('/productos/:id', (req, res) => {
+app.get('/productos/:id', async (req, res) => {
     try {
         let productoId = parseInt(req.params.id)
-        let productoEncontrado = datos.productos.find((producto) => producto.id === productoId)
+        let productoEncontrado = await Productos.findByPk(productoId)
 
         res.status(200).json(productoEncontrado)
 
@@ -48,10 +57,10 @@ app.get('/productos/:id', (req, res) => {
     }
 })
 
-app.get('/productos/:id/precio', (req, res) => {
+app.get('/productos/:id/precio', async (req, res) => {
     try {
         let productoId = parseInt(req.params.id)
-        let productoEncontrado = datos.productos.find((producto) => producto.id === productoId)
+        let productoEncontrado = await Productos.findByPk(productoId)
 
         res.status(200).json(productoEncontrado.precio)
 
@@ -60,25 +69,29 @@ app.get('/productos/:id/precio', (req, res) => {
     }
 })
 
-app.get('/stock', (req, res) => {
+app.get('/stock', async (req, res) => {
     try {
         var preciototal = 0;
-        var stock = datos.productos.length;
-        for(let i = 0; i < datos.productos.length; i = i + 1 ) {  
-            preciototal = preciototal+datos.productos[i].precio
+        var stock = await Productos.count();
+        for (let i = 1; i <= stock; i++) { 
+            let productofound = await Productos.findByPk(i);
+            if (productofound) { 
+                preciototal = preciototal + productofound.precio;
+            }
         }
 
-        res.status(200).json("Stock de productos actual: "+stock+" Precios individuales sumados: "+preciototal.toFixed(2))
+        res.status(200).json("Stock de productos actual: " + stock + " Precios individuales sumados: " + preciototal);
 
     } catch (error) {
-        res.status(204).json({"message": error})
+        res.status(500).json({"message": error.message});
     }
 })
 
-app.get('/productos/:id/nombre', (req, res) => {
+
+app.get('/productos/:id/nombre', async (req, res) => {
     try {
         let productoId = parseInt(req.params.id)
-        let productoEncontrado = datos.productos.find((producto) => producto.id === productoId)
+        let productoEncontrado = await Productos.findByPk(productoId)
 
         res.status(200).json(productoEncontrado.nombre)
 
@@ -87,10 +100,10 @@ app.get('/productos/:id/nombre', (req, res) => {
     }
 })
 
-app.get('/usuarios/:id', (req, res) => {
+app.get('/usuarios/:id', async (req, res) => {
     try {
         let usuarioId = parseInt(req.params.id)
-        let usuarioEncontrado = datos.usuarios.find((usuario) => usuario.id === usuarioId)
+        let usuarioEncontrado = await Usuarios.findByPk(usuarioId)
 
         res.status(200).json(usuarioEncontrado)
 
@@ -99,22 +112,10 @@ app.get('/usuarios/:id', (req, res) => {
     }
 })
 
-app.get('/usuarios/:id/telefono', (req, res) => {
+app.get('/usuarios/:id/nombre', async (req, res) => {
     try {
         let usuarioId = parseInt(req.params.id)
-        let usuarioEncontrado = datos.usuarios.find((usuario) => usuario.id === usuarioId)
-
-        res.status(200).json(usuarioEncontrado.telefono)
-
-    } catch (error) {
-        res.status(204).json({"message": error})
-    }
-})
-
-app.get('/usuarios/:id/nombre', (req, res) => {
-    try {
-        let usuarioId = parseInt(req.params.id)
-        let usuarioEncontrado = datos.usuarios.find((usuario) => usuario.id === usuarioId)
+        let usuarioEncontrado = await Usuarios.findByPk(usuarioId)
 
         res.status(200).json(usuarioEncontrado.nombre)
 
@@ -123,7 +124,19 @@ app.get('/usuarios/:id/nombre', (req, res) => {
     }
 })
 
-app.post('/productos', (req, res) => {
+app.get('/usuarios/:id/dni', async (req, res) => {
+    try {
+        let usuarioId = parseInt(req.params.id)
+        let usuarioEncontrado = await Usuarios.findByPk(usuarioId)
+
+        res.status(200).json(usuarioEncontrado.dni)
+
+    } catch (error) {
+        res.status(204).json({"message": error})
+    }
+})
+
+app.post('/productos', async (req, res) => {
     try {
         let bodyTemp = ''
 
@@ -131,10 +144,12 @@ app.post('/productos', (req, res) => {
             bodyTemp += chunk.toString()
         })
     
-        req.on('end', () => {
+        req.on('end', async () => {
             const data = JSON.parse(bodyTemp)
             req.body = data
-            datos.productos.push(req.body)
+            
+             const productoAGuardar = new Productos(req.body)
+             await productoAGuardar.save()
         })
     
         res.status(201).json({"message": "success"})
@@ -152,10 +167,12 @@ app.post('/usuarios', (req, res) => {
             bodyTemp += chunk.toString()
         })
     
-        req.on('end', () => {
+        req.on('end', async () => {
             const data = JSON.parse(bodyTemp)
             req.body = data
-            datos.usuarios.push(req.body)
+            
+            const usuarioAGuardar = new Usuarios(req.body)
+            await usuarioAGuardar.save()
         })
     
         res.status(201).json({"message": "success"})
@@ -165,9 +182,10 @@ app.post('/usuarios', (req, res) => {
     }
 })
 
-app.patch('/productos/:id', (req, res) => {
+app.patch('/productos/:id', async (req, res) => {
     let idProductoAEditar = parseInt(req.params.id)
-    let productoAActualizar = datos.productos.find((producto) => producto.id === idProductoAEditar)
+try {
+    let productoAActualizar = await Productos.findByPk(idProductoAEditar)
 
     if (!productoAActualizar) {
         res.status(204).json({"message":"Producto no encontrado"})
@@ -179,29 +197,24 @@ app.patch('/productos/:id', (req, res) => {
         bodyTemp += chunk.toString()
     })
 
-    req.on('end', () => {
+    req.on('end', async () => {
         const data = JSON.parse(bodyTemp)
         req.body = data
         
-        if(data.nombre){
-            productoAActualizar.nombre = data.nombre
-        }
-        
-        if (data.tipo){
-            productoAActualizar.tipo = data.tipo
-        }
-
-        if (data.precio){
-            productoAActualizar.precio = data.precio
-        }
+        await productoAActualizar.update(req.body)
 
         res.status(200).send('Producto actualizado')
     })
+} catch (error) {
+    res.status(204).json({"message":"Producto no encontrado"})
+}
 })
 
-app.patch('/usuarios/:id', (req, res) => {
+app.patch('/usuarios/:id', async (req, res) => {
     let idUsuarioAEditar = parseInt(req.params.id)
-    let usuarioAActualizar = datos.usuarios.find((usuario) => usuario.id === idUsuarioAEditar)
+
+try {
+    let usuarioAActualizar = await Usuarios.findByPk(idUsuarioAEditar)
 
     if (!usuarioAActualizar) {
         res.status(204).json({"message":"Usuario no encontrado"})
@@ -213,46 +226,49 @@ app.patch('/usuarios/:id', (req, res) => {
         bodyTemp += chunk.toString()
     })
 
-    req.on('end', () => {
+    req.on('end', async () => {
         const data = JSON.parse(bodyTemp)
         req.body = data
         
-        if(data.nombre){
-            usuarioAActualizar.nombre = data.nombre
-        }
-        
-        if (data.edad){
-            usuarioAActualizar.edad = data.edad
-        }
-
-        if (data.email){
-            usuarioAActualizar.email = data.email
-        }
-
-        if (data.telefono){
-            usuarioAActualizar.telefono = data.telefono
-        }
+        await usuarioAActualizar.update(req.body)
 
         res.status(200).send('Usuario actualizado')
     })
+} catch (error) {
+    res.status(204).json({"message":"Usuario no encontrado"})
+}
 })
 
-app.delete('/productos/:id', (req, res) => {
+app.delete('/productos/:id', async (req, res) => {
     let idProductoABorrar = parseInt(req.params.id)
-    let productoABorrar = datos.productos.find((producto) => producto.id === idProductoABorrar)
-
+try {
+    let productoABorrar = await Productos.findByPk(idProductoABorrar)
     if (!productoABorrar){
         res.status(204).json({"message":"Producto no encontrado"})
     }
 
-    let indiceProductoABorrar = datos.productos.indexOf(productoABorrar)
-    try {
-         datos.productos.splice(indiceProductoABorrar, 1)
-    res.status(200).json({"message": "success"})
+    await productoABorrar.destroy()
+    res.status(200).json({message: "Producto Borrado"})
 
-    } catch (error) {
-        res.status(204).json({"message": "error"})
+} catch (error) {
+    res.status(204).json({message: error})
+}    
+})
+
+app.delete('/usuarios/:id', async (req, res) => {
+    let idUsuarioABorrar = parseInt(req.params.id)
+try {
+    let usuarioABorrar = await Usuarios.findByPk(idUsuarioABorrar)
+    if (!usuarioABorrar){
+        res.status(204).json({"message":"Usuario no encontrado"})
     }
+
+    await usuarioABorrar.destroy()
+    res.status(200).json({message: "Usuario Borrado"})
+
+} catch (error) {
+    res.status(204).json({message: error})
+}    
 })
 
 app.use((req, res) => {

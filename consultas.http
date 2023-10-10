@@ -26,7 +26,7 @@ GET http://localhost:1234/usuarios/3/
 
 ### Obtención del telefono de un usuario específico
 
-GET http://localhost:1234/usuarios/5/telefono
+GET http://localhost:1234/usuarios/5/dni
 
 ### Obtención del nombre de un usuario específico
 
@@ -37,10 +37,13 @@ POST http://localhost:1234/productos
 Content-Type: application/json
 
 {
-    "id": 11,
+    "id": 8,
     "nombre": "Mixer multiuso ACME",
-    "tipo": "Electrodoméstico de cocina",
-    "precio": 150.15
+    "descripcion": "Electrodoméstico de cocina",
+    "stock": 150,
+    "categoria": "Electrodomestico",
+    "proveedor": "Will Tech",
+    "precio": 5000
 }
 
 ### Agregado de un usuario nuevo, el body lleva el json con el objeto
@@ -48,16 +51,17 @@ POST http://localhost:1234/usuarios
 Content-Type: application/json
 
 {
-        "id": 11,
-        "nombre": "Mauro Quinteros",
-        "edad": 19,
+        "id": 8,
+        "dni": "45718410",
+        "nombre": "Mauro",
+        "apellido": "Quinteros",
         "email": "RoMau23@hotmail.com",
-        "telefono": "+54 261-657-9225"
+        "contraseña": "XD"
  }
 
 ### Actualización de un producto, el body lleva solo el atributo a modificar
 
-PATCH http://localhost:1234/productos/10
+PATCH http://localhost:1234/productos/8
 Content-Type: application/json
 
 {
@@ -66,11 +70,11 @@ Content-Type: application/json
 
 ### Actualización de un usuario, el body lleva solo el atributo a modificar
 
-PATCH http://localhost:1234/usuarios/10
+PATCH http://localhost:1234/usuarios/8
 Content-Type: application/json
 
 {
-    "nombre": "Roberto Quintana XD"
+    "nombre": "Roberto"
 }
 
 ### Borrado de un producto
